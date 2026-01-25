@@ -1,0 +1,112 @@
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         String
+  createdAt    DateTime @default(now())
+
+  doctorProfile  Doctor?
+  nurseProfile   Nurse?
+  patientProfile Patient?
+
+  reviewedApplications StaffApplication[]
+}
+
+model Department {
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  doctors Doctor[]
+}
+
+model Doctor {
+  id             Int     @id @default(autoincrement())
+  fullName       String
+  specialization String?
+  departmentId   Int
+  userId         Int     @unique
+
+  department Department @relation(fields: [departmentId], references: [id])
+  user       User       @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  appointments  Appointment[]
+  prescriptions Prescription[]
+}
+
+model Nurse {
+  id       Int    @id @default(autoincrement())
+  fullName String
+  userId   Int    @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Patient {
+  id       Int       @id @default(autoincrement())
+  fullName String
+  dob      DateTime?
+  phone    String?
+  userId   Int       @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  appointments  Appointment[]
+  admissions    Admission[]
+  prescriptions Prescription[]
+}
+
+model Appointment {
+  id       Int      @id @default(autoincrement())
+  dateTime DateTime
+  status   String   @default("Scheduled")
+
+  doctorId  Int
+  patientId Int
+
+  doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Admission {
+  id            Int       @id @default(autoincrement())
+  admitDate     DateTime  @default(now())
+  dischargeDate DateTime?
+  status        String    @default("Admitted")
+  diagnosis     String?
+
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Prescription {
+  id         Int      @id @default(autoincrement())
+  date       DateTime @default(now())
+  medication String
+  notes      String?
+
+  doctorId  Int
+  patientId Int
+
+  doctor  Doctor  @relation(fields: [doctorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model StaffApplication {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  email          String
+  roleAppliedFor String
+  status         String   @default("PENDING")
+  appliedAt      DateTime @default(now())
+
+  reviewedByAdminUserId Int?
+  reviewedByAdmin       User? @relation(fields: [reviewedByAdminUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
