@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:generate": "prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -11,6 +15,7 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^6.19.2",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
@@ -19,14 +24,5 @@
   "devDependencies": {
     "nodemon": "^3.1.11",
     "prisma": "^6.19.2"
-  },
-
-
-  "scripts": {
-  "dev": "nodemon src/index.js",
-  "start": "node src/index.js"
+  }
 }
-
-
-}
-

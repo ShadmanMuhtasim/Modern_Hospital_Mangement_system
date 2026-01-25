@@ -30,5 +30,40 @@ app.get("/patients", async (req, res) => {
   }
 });
 
+
+const bcrypt = require("bcryptjs");
+const prisma = require("./prismaClient");
+
+app.post("/users", async (req, res) => {
+  const { email, password, role } = req.body;
+
+  if (!email || !password || !role) {
+    return res.status(400).json({ error: "email, password, role are required" });
+  }
+
+  try {
+    // Optional: allow only ONE admin
+    if (role === "ADMIN") {
+      const existingAdmin = await prisma.user.findFirst({ where: { role: "ADMIN" } });
+      if (existingAdmin) {
+        return res.status(400).json({ error: "Admin already exists" });
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: { email, passwordHash, role },
+    });
+
+    // Don’t return passwordHash in response
+    const { passwordHash: _, ...safeUser } = user;
+    res.json(safeUser);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log("Server running on port", PORT));
