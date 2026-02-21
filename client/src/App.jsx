@@ -1,10 +1,5 @@
-function App() {
-  return (
-    <div>
-      <h1>Modern Hospital Management System</h1>
-      <p>Frontend is ready</p>
-    </div>
-  );
-}
+import Home from "./pages/Home";
 
-export default App;
+export default function App() {
+  return <Home />;
+}

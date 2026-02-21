@@ -66,3 +66,17 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Make the app truly full width */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove any default body background that causes the dark right side */
+body {
+  background: #ffffff;
+  overflow-x: hidden;
+}
