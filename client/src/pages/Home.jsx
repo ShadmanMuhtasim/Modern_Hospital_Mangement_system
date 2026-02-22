@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import { loginPatient, registerPatient } from "../services/auth";
 
 export default function Home() {
+  const navigate = useNavigate();
   const [mode, setMode] = useState("login");
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -33,21 +35,28 @@ export default function Home() {
     !regForm.bloodGroup;
 
   const heroTitle = useMemo(() => "Genuine Treatments\nfor your Health.", []);
+async function onLogin(e) {
+  e.preventDefault();
+  setErr(""); setMsg(""); setLoading(true);
+  try {
+    const data = await loginPatient(loginForm.email, loginForm.password);
 
-  async function onLogin(e) {
-    e.preventDefault();
-    setErr("");
-    setMsg("");
-    setLoading(true);
-    try {
-      await loginPatient(loginForm.email, loginForm.password);
-      setMsg("Logged in ✅");
-    } catch (e2) {
-      setErr(e2?.response?.data?.message || "Login failed");
-    } finally {
-      setLoading(false);
-    }
+    setMsg("Logged in ✅");
+
+    const role = data?.user?.role;
+    if (role === "PATIENT") navigate("/patient");
+    else if (role === "ADMIN") navigate("/admin");
+    else if (role === "DOCTOR") navigate("/doctor");
+    else if (role === "NURSE") navigate("/nurse");
+    else if (role === "IT") navigate("/it");
+    else navigate("/");
+
+  } catch (e2) {
+    setErr(e2?.response?.data?.message || "Login failed");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function onRegister(e) {
     e.preventDefault();

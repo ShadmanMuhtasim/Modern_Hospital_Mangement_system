@@ -45,22 +45,24 @@ model Nurse {
 }
 
 model Patient {
-  id            Int            @id @default(autoincrement())
-  fullName      String
-  dob           DateTime?
-  phone         String?
+  id       Int       @id @default(autoincrement())
+  fullName String
+  dob      DateTime?
+  phone    String?
 
   // ✅ ADD THESE NEW FIELDS
-  sex           String
-  age           Int
-  address       String
-  bloodGroup    String
+  sex        String
+  age        Int
+  address    String
+  bloodGroup String
 
-  userId        Int            @unique
-  admissions    Admission[]
-  appointments  Appointment[]
-  user          User           @relation(fields: [userId], references: [id], onUpdate: NoAction)
-  prescriptions Prescription[]
+  userId         Int             @unique
+  admissions     Admission[]
+  appointments   Appointment[]
+  user           User            @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  prescriptions  Prescription[]
+  bloodRequests  BloodRequest[]
+  bloodDonations BloodDonation[]
 }
 
 model Appointment {
@@ -103,4 +105,33 @@ model StaffApplication {
   appliedAt             DateTime @default(now())
   reviewedByAdminUserId Int?
   reviewedByAdmin       User?    @relation(fields: [reviewedByAdminUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model BloodInventory {
+  id             Int      @id @default(autoincrement())
+  bloodGroup     String   @unique
+  unitsAvailable Int      @default(0)
+  updatedAt      DateTime @updatedAt
+}
+
+model BloodRequest {
+  id             Int      @id @default(autoincrement())
+  bloodGroup     String
+  unitsRequested Int
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+}
+
+model BloodDonation {
+  id           Int      @id @default(autoincrement())
+  bloodGroup   String
+  unitsDonated Int
+  status       String   @default("APPROVED") // auto-approved for now
+  createdAt    DateTime @default(now())
+
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onUpdate: NoAction)
 }

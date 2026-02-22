@@ -1,25 +1,25 @@
-import { api } from "./api";
+import api from "./api";
 
-const KEY = "mhms_token";
+export async function loginPatient(email, password) {
+  const { data } = await api.post("/auth/login", { email, password });
 
-export function saveToken(token) {
-  localStorage.setItem(KEY, token);
-  api.defaults.headers.common.Authorization = `Bearer ${token}`;
-}
+  // store token + role
+  localStorage.setItem("mhms_token", data.token);
+  localStorage.setItem("mhms_role", data.user.role);
 
-export function loadToken() {
-  const t = localStorage.getItem(KEY);
-  if (t) api.defaults.headers.common.Authorization = `Bearer ${t}`;
-  return t;
+  // attach token for future requests
+  api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+
+  return data;
 }
 
 export async function registerPatient(payload) {
-  const res = await api.post("/auth/register", payload);
-  return res.data;
+  const { data } = await api.post("/auth/register", payload);
+  return data;
 }
 
-export async function loginPatient(email, password) {
-  const res = await api.post("/auth/login", { email, password });
-  saveToken(res.data.token);
-  return res.data;
+export function logout() {
+  localStorage.removeItem("mhms_token");
+  localStorage.removeItem("mhms_role");
+  delete api.defaults.headers.common.Authorization;
 }

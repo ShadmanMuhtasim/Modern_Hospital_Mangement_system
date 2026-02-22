@@ -1,0 +1,208 @@
+.pdShell{
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  background: #0b1220;
+  color: white;
+}
+
+.pdSide{
+  background: #0f172a;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pdBrand{ display:flex; gap:12px; align-items:center; }
+.pdLogo{
+  width: 44px; height: 44px; border-radius: 12px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(59,130,246,0.2);
+  border: 1px solid rgba(59,130,246,0.35);
+  font-weight: 900;
+}
+.pdTitle{ font-weight: 900; font-size: 16px; }
+.pdSub{ opacity: 0.7; font-size: 12px; margin-top: 2px; }
+
+.pdProfile{
+  display:flex; gap:12px; align-items:center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 12px;
+}
+.pdAvatar{ font-size: 22px; }
+.pdName{ font-weight: 900; }
+.pdMeta{ opacity: 0.8; font-size: 12px; margin-top: 2px; }
+
+.pdNav{ display:flex; flex-direction:column; gap:8px; margin-top: 6px; }
+.pdNavItem{
+  text-align:left;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.10);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.pdNavItem:hover{ border-color: rgba(59,130,246,0.55); }
+.pdNavItem.active{
+  background: rgba(59,130,246,0.18);
+  border-color: rgba(59,130,246,0.55);
+}
+
+.pdLogout{
+  margin-top: auto;
+  background: rgba(239,68,68,0.14);
+  border: 1px solid rgba(239,68,68,0.35);
+  color: white;
+  padding: 12px;
+  border-radius: 12px;
+  cursor:pointer;
+}
+.pdLogout:hover{ background: rgba(239,68,68,0.22); }
+
+.pdMain{
+  padding: 22px;
+  background: radial-gradient(1200px 600px at 20% 0%, rgba(59,130,246,0.25), transparent 60%),
+              radial-gradient(900px 600px at 80% 20%, rgba(147,51,234,0.18), transparent 55%),
+              #0b1220;
+}
+
+.pdHeader{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.pdH1{ font-size: 22px; font-weight: 900; }
+.pdH2{ opacity: 0.75; font-size: 12px; margin-top: 2px; }
+
+.pdHeaderRight{ display:flex; align-items:center; gap:10px; }
+.pdSearch{
+  width: 360px;
+  max-width: 48vw;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+.pdBell{
+  width: 42px; height: 42px; border-radius: 12px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.pdActions{
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.pdActionBtn{
+  padding: 12px 10px;
+  border-radius: 14px;
+  cursor:pointer;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color:white;
+  font-weight: 800;
+}
+.pdActionBtn:hover{ border-color: rgba(59,130,246,0.55); }
+
+.pdMsgErr{
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.35);
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.pdMsgOk{
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.28);
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.pdGrid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pdCard{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 16px;
+  padding: 14px;
+}
+.pdCardTitle{ font-weight: 900; margin-bottom: 8px; }
+.pdCardText{ opacity: 0.85; font-size: 13px; margin-bottom: 10px; }
+
+.pdInvMini{ display:flex; flex-wrap: wrap; gap: 8px; }
+.pdChip{
+  display:flex; gap:10px; align-items:center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.pdChip b{ font-size: 14px; }
+
+.pdForm{ display:flex; flex-direction:column; gap:8px; }
+.pdForm label{ font-size: 12px; opacity: 0.85; }
+.pdForm input, .pdForm select{
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+.pdPrimary{
+  margin-top: 6px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.95), rgba(147,51,234,0.85));
+  border: none;
+  color:white;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor:pointer;
+}
+
+.pdTable{ display:flex; flex-direction:column; gap:8px; }
+.pdRow{
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+}
+.pdRow.head{
+  background: rgba(255,255,255,0.06);
+  font-weight: 900;
+}
+
+.pdList{ margin: 0; padding-left: 18px; }
+.badge{
+  display:inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+
+@media (max-width: 1100px){
+  .pdActions{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pdGrid{ grid-template-columns: 1fr; }
+  .pdShell{ grid-template-columns: 1fr; }
+  .pdSide{ position: sticky; top: 0; z-index: 5; }
+}
