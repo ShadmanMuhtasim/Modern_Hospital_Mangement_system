@@ -1,3 +1,57 @@
+import { useEffect, useState } from "react";
+import DashboardShell from "../components/DashboardShell";
+import api from "../services/api";
+
+export default function PatientDashboard() {
+  const [me, setMe] = useState(null);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get("/auth/me");
+        setMe(data);
+      } catch (e) {
+        setErr(e?.response?.data?.message || "Failed to load profile");
+      }
+    })();
+  }, []);
+
+  return (
+    <DashboardShell
+      title="Patient Dashboard"
+      subtitle="Profile, admissions, medical records, blood bank & bed availability"
+    >
+      <div className="card" style={{ padding: 16 }}>
+        {err ? <div style={{ color: "#b91c1c", fontWeight: 800 }}>{err}</div> : null}
+
+        <div style={{ fontWeight: 900 }}>Logged in as</div>
+        <div className="small">{me?.user?.email}</div>
+
+        <div style={{ height: 10 }} />
+
+        <div className="row2">
+          <div className="card" style={{ padding: 14 }}>
+            <div style={{ fontWeight: 900 }}>Name</div>
+            <div className="small">{me?.profiles?.patient?.fullName || me?.patient?.fullName || "-"}</div>
+          </div>
+          <div className="card" style={{ padding: 14 }}>
+            <div style={{ fontWeight: 900 }}>Blood Group</div>
+            <div className="small">{me?.profiles?.patient?.bloodGroup || me?.patient?.bloodGroup || "-"}</div>
+          </div>
+        </div>
+
+        <div style={{ height: 14 }} />
+        <div className="small">
+          Next: we will add pages inside patient dashboard for:
+          <b> Admissions</b>, <b> Medical Records</b>, <b> Bank Blood Request</b>, <b> Bed Summary</b>.
+        </div>
+      </div>
+    </DashboardShell>
+  );
+}
+
+/*
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
@@ -14,7 +68,7 @@ export default function PatientDashboard() {
 
   const [me, setMe] = useState(null);
 
-  // Blood bank
+
   const [inventory, setInventory] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
   const [myDonations, setMyDonations] = useState([]);
@@ -40,11 +94,11 @@ export default function PatientDashboard() {
     setErr(""); setMsg("");
     setLoading(true);
     try {
-      // profile
+
       const meRes = await api.get("/auth/me");
       setMe(meRes.data);
 
-      // blood info
+ 
       const invRes = await api.get("/blood/inventory");
       setInventory(invRes.data);
 
@@ -54,7 +108,7 @@ export default function PatientDashboard() {
       const donRes = await api.get("/blood/donations/my");
       setMyDonations(donRes.data);
 
-      // set request default bloodGroup to patient blood group if available
+      
       const bg = meRes.data?.patient?.bloodGroup;
       if (bg) setBloodReqForm((p) => ({ ...p, bloodGroup: bg }));
 
@@ -67,7 +121,7 @@ export default function PatientDashboard() {
 
   useEffect(() => {
     loadAll();
-    // optional: auto refresh every 15s for “dynamic”
+
     const t = setInterval(loadAll, 15000);
     return () => clearInterval(t);
   }, []);
@@ -108,7 +162,7 @@ export default function PatientDashboard() {
 
   return (
     <div className="pdShell">
-      {/* Sidebar */}
+      { }
       <aside className="pdSide">
         <div className="pdBrand">
           <div className="pdLogo">＋</div>
@@ -147,7 +201,7 @@ export default function PatientDashboard() {
         </button>
       </aside>
 
-      {/* Main */}
+      { }
       <main className="pdMain">
         <header className="pdHeader">
           <div>
@@ -161,7 +215,7 @@ export default function PatientDashboard() {
           </div>
         </header>
 
-        {/* Action buttons */}
+        { }
         <div className="pdActions">
           <button className="pdActionBtn" onClick={() => setTab("appointments")}>Request Appointment</button>
           <button className="pdActionBtn" onClick={() => setTab("blood")}>Request Blood</button>
@@ -173,7 +227,7 @@ export default function PatientDashboard() {
         {err && <div className="pdMsgErr">{err}</div>}
         {msg && <div className="pdMsgOk">{msg}</div>}
 
-        {/* Tabs */}
+        { }
         {loading ? (
           <div className="pdCard">Loading dashboard...</div>
         ) : tab === "overview" ? (
@@ -344,3 +398,4 @@ export default function PatientDashboard() {
     </div>
   );
 }
+*/

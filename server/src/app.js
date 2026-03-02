@@ -15,5 +15,13 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/blood", require("./routes/blood.routes"));
+app.use("/api/bank-blood", require("./routes/bankBlood.routes"));
+app.use("/api/ward", require("./routes/ward.routes"));
+app.use("/api/medical", require("./routes/medical.routes"));
+app.use("/api/admissions", require("./routes/admission.routes"));
+app.use("/api/applications", require("./routes/applications.routes"));
+app.use("/api/donor-auth", require("./routes/donorAuth.routes"));
+app.use("/api/dev", require("./routes/dev.routes"));
+
 
 module.exports = app;
