@@ -17,6 +17,10 @@ model User {
   nurseProfile         Nurse?
   patientProfile       Patient?
   reviewedApplications StaffApplication[]
+  itWorkerProfile      ITWorker?
+  donorProfile         BloodDonor?
+
+  applicantApplications StaffApplication[] @relation("ApplicantUser")
 }
 
 model Department {
@@ -44,6 +48,13 @@ model Nurse {
   user     User   @relation(fields: [userId], references: [id], onUpdate: NoAction)
 }
 
+model ITWorker {
+  id       Int    @id @default(autoincrement())
+  fullName String
+  userId   Int    @unique
+  user     User   @relation(fields: [userId], references: [id], onUpdate: NoAction)
+}
+
 model Patient {
   id       Int       @id @default(autoincrement())
   fullName String
@@ -56,13 +67,15 @@ model Patient {
   address    String
   bloodGroup String
 
-  userId         Int             @unique
-  admissions     Admission[]
-  appointments   Appointment[]
-  user           User            @relation(fields: [userId], references: [id], onUpdate: NoAction)
-  prescriptions  Prescription[]
-  bloodRequests  BloodRequest[]
-  bloodDonations BloodDonation[]
+  userId            Int                @unique
+  admissions        Admission[]
+  appointments      Appointment[]
+  user              User               @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  prescriptions     Prescription[]
+  bloodRequests     BloodRequest[]
+  bloodDonations    BloodDonation[]
+  medicalRecords    MedicalRecord[]
+  bankBloodRequests BankBloodRequest[]
 }
 
 model Appointment {
@@ -83,6 +96,8 @@ model Admission {
   diagnosis     String?
   patientId     Int
   patient       Patient   @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+  bedId         Int?
+  bed           Bed?      @relation(fields: [bedId], references: [id], onUpdate: NoAction)
 }
 
 model Prescription {
@@ -105,6 +120,8 @@ model StaffApplication {
   appliedAt             DateTime @default(now())
   reviewedByAdminUserId Int?
   reviewedByAdmin       User?    @relation(fields: [reviewedByAdminUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  applicantUserId       Int?     @unique
+  applicantUser         User?    @relation("ApplicantUser", fields: [applicantUserId], references: [id], onUpdate: NoAction)
 }
 
 model BloodInventory {
@@ -134,4 +151,130 @@ model BloodDonation {
 
   patientId Int
   patient   Patient @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+}
+
+model WardUnit {
+  id       Int    @id @default(autoincrement())
+  unitType String // ICU / CCU / NCU / GENERAL etc (keep string for flexibility)
+  floor    Int?
+
+  // optional: total designed capacity
+  capacity Int? // you can compute from beds count too
+
+  beds Bed[]
+}
+
+model Bed {
+  id        Int    @id @default(autoincrement())
+  bedNumber String // "ICU-01", "W3-12", etc
+  status    String @default("AVAILABLE") // AVAILABLE / OCCUPIED / MAINTENANCE
+
+  unitId     Int
+  unit       WardUnit    @relation(fields: [unitId], references: [id], onUpdate: NoAction)
+  admissions Admission[]
+
+  // avoid duplicate bed numbers inside same unit
+  @@unique([unitId, bedNumber])
+}
+
+model MedicalRecord {
+  id         Int      @id @default(autoincrement())
+  recordNo   String   @unique
+  recordDate DateTime @default(now())
+  diagnosis  String?
+  treatment  String?
+  notes      String?
+
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+}
+
+model BloodBank {
+  id       Int     @id @default(autoincrement())
+  bankName String
+  location String?
+
+  inventories BankBloodInventory[]
+  donations   BankDonation[]
+  issues      BloodIssue[]
+  requests    BankBloodRequest[]
+}
+
+model BloodDonor {
+  id               Int       @id @default(autoincrement())
+  fullName         String
+  phone            String? // you can make @unique if required
+  dob              DateTime?
+  bloodGroup       String
+  lastDonationDate DateTime?
+
+  donations BankDonation[]
+  userId    Int?           @unique
+  user      User?          @relation(fields: [userId], references: [id], onUpdate: NoAction)
+}
+
+// Bank-specific inventory (ERD)
+model BankBloodInventory {
+  id             Int      @id @default(autoincrement())
+  bloodGroup     String
+  unitsAvailable Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  bankId Int
+  bank   BloodBank @relation(fields: [bankId], references: [id], onUpdate: NoAction)
+
+  @@unique([bankId, bloodGroup])
+}
+
+// Blood request processed by a bank (ERD-style)
+// We keep your existing BloodRequest table untouched.
+// This new table supports bank workflow and queries.
+model BankBloodRequest {
+  id             Int      @id @default(autoincrement())
+  bloodGroup     String
+  unitsRequested Int
+  status         String   @default("PENDING") // PENDING/APPROVED/FULFILLED/REJECTED
+  createdAt      DateTime @default(now())
+
+  // Who requested (patient)
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id], onUpdate: NoAction)
+
+  // Which bank is processing
+  bankId Int
+  bank   BloodBank @relation(fields: [bankId], references: [id], onUpdate: NoAction)
+
+  issues BloodIssue[]
+}
+
+// Donation to a bank from a non-patient donor (ERD)
+// We keep your existing BloodDonation (patient donation) untouched.
+model BankDonation {
+  id           Int      @id @default(autoincrement())
+  bloodGroup   String
+  unitsDonated Int
+  status       String   @default("APPROVED")
+  createdAt    DateTime @default(now())
+
+  donorId Int
+  donor   BloodDonor @relation(fields: [donorId], references: [id], onUpdate: NoAction)
+
+  bankId Int
+  bank   BloodBank @relation(fields: [bankId], references: [id], onUpdate: NoAction)
+}
+
+// Issuing/Fulfillment transaction (ERD requirement)
+// When a bank fulfills a request, log it here and decrement inventory.
+model BloodIssue {
+  id          Int      @id @default(autoincrement())
+  issuedAt    DateTime @default(now())
+  unitsIssued Int
+  issuedGroup String // what was actually issued (compatible group)
+  status      String   @default("ISSUED") // ISSUED / REVERSED etc
+
+  requestId Int
+  request   BankBloodRequest @relation(fields: [requestId], references: [id], onUpdate: NoAction)
+
+  bankId Int
+  bank   BloodBank @relation(fields: [bankId], references: [id], onUpdate: NoAction)
 }

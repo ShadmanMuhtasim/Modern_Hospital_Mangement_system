@@ -1,3 +1,101 @@
+/* Clean base */
+:root {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  line-height: 1.4;
+  color: #0f172a;
+  background: #f6f7fb;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.btn {
+  border: 1px solid #e5e7eb;
+  background: #0ea5e9;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: white;
+  color: #0f172a;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #0ea5e9;
+}
+
+.small {
+  font-size: 12px;
+  color: #475569;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  border: 1px solid #e0e7ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.row {
+  display: grid;
+  gap: 12px;
+}
+
+.row2 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .row2 { grid-template-columns: 1fr; }
+}
+
+/*
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -67,16 +165,14 @@ button:focus-visible {
   }
 }
 
-/* Make the app truly full width */
 html, body, #root {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
 }
-
-/* Remove any default body background that causes the dark right side */
 body {
   background: #ffffff;
   overflow-x: hidden;
 }
+*/

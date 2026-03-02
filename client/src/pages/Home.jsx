@@ -1,3 +1,95 @@
+import { useNavigate } from "react-router-dom";
+import { clearSession } from "../services/auth";
+
+export default function Home() {
+  const nav = useNavigate();
+
+  return (
+    <div style={{ padding: 28 }}>
+      <div className="container">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 900 }}>Modern Hospital Management System</div>
+            <div className="small">Patient • Blood Donor • Job Seeker • Admin</div>
+          </div>
+          <button
+            className="btn btnSecondary"
+            onClick={() => {
+              clearSession();
+              nav("/");
+            }}
+            type="button"
+          >
+            Clear Session
+          </button>
+        </div>
+
+        <div style={{ height: 18 }} />
+
+        <div className="row2">
+          <div className="card" style={{ padding: 18 }}>
+            <div className="badge">Patient</div>
+            <h2 style={{ margin: "10px 0 6px" }}>Register / Login</h2>
+            <div className="small">Access dashboard: blood, admissions, medical records, beds.</div>
+
+            <div style={{ height: 14 }} />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="btn" onClick={() => nav("/patient/auth?mode=login")}>Patient Login</button>
+              <button className="btn btnSecondary" onClick={() => nav("/patient/auth?mode=register")}>
+                Patient Register
+              </button>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 18 }}>
+            <div className="badge">Blood Donor</div>
+            <h2 style={{ margin: "10px 0 6px" }}>Register / Login</h2>
+            <div className="small">Donate to a specific blood bank and track donations.</div>
+
+            <div style={{ height: 14 }} />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="btn" onClick={() => nav("/donor/auth?mode=login")}>Donor Login</button>
+              <button className="btn btnSecondary" onClick={() => nav("/donor/auth?mode=register")}>
+                Donor Register
+              </button>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 18 }}>
+            <div className="badge">Job Seeker</div>
+            <h2 style={{ margin: "10px 0 6px" }}>Apply / Login</h2>
+            <div className="small">Apply for Doctor / Nurse / IT / Staff. Track pending/approved.</div>
+
+            <div style={{ height: 14 }} />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="btn" onClick={() => nav("/applicant/auth?mode=apply")}>Apply</button>
+              <button className="btn btnSecondary" onClick={() => nav("/applicant/auth?mode=login")}>
+                Applicant Login
+              </button>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: 18 }}>
+            <div className="badge">Admin</div>
+            <h2 style={{ margin: "10px 0 6px" }}>Admin Login</h2>
+            <div className="small">Approve job applications, view system summaries.</div>
+
+            <div style={{ height: 14 }} />
+            <button className="btn" onClick={() => nav("/admin/login")}>Admin Login</button>
+          </div>
+        </div>
+
+        <div style={{ height: 18 }} />
+        <div className="small">
+          Tip: keep backend running on <b>http://localhost:5000</b> and frontend on <b>http://localhost:5173</b>.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/*
+
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
@@ -23,7 +115,6 @@ export default function Home() {
     bloodGroup: "",
   });
 
-  // ✅ disable register submit unless ALL required fields filled
   const regDisabled =
     !regForm.fullName ||
     !regForm.phone ||
@@ -122,7 +213,7 @@ async function onLogin(e) {
 
       <section className="hero">
         <div className="heroInner">
-          {/* Left */}
+          { }
           <div className="revealLeft">
             <h1 className="h1">
               {heroTitle.split("\n").map((line, i) => (
@@ -293,7 +384,7 @@ async function onLogin(e) {
             </div>
           </div>
 
-          {/* Right */}
+          { }
           <div className="illusWrap revealRight">
             <div className="floaty">
               <DoctorIllustration />
@@ -308,7 +399,7 @@ async function onLogin(e) {
         </div>
       </section>
 
-      {/* SERVICES */}
+      {}
       <section className="section">
         <div className="container">
           <h2 className="sectionTitle">Our Services</h2>
@@ -352,7 +443,7 @@ async function onLogin(e) {
         </div>
       </section>
 
-      {/* DEPARTMENTS PREVIEW */}
+      {}
       <section className="sectionAlt">
         <div className="container">
           <h2 className="sectionTitle">Departments</h2>
@@ -372,7 +463,7 @@ async function onLogin(e) {
         </div>
       </section>
 
-      {/* DOCTORS PREVIEW */}
+      {}
       <section className="section">
         <div className="container">
           <h2 className="sectionTitle">Featured Doctors</h2>
@@ -392,7 +483,7 @@ async function onLogin(e) {
         </div>
       </section>
 
-      {/* ARTICLES */}
+      { }
       <section className="sectionAlt">
         <div className="container">
           <h2 className="sectionTitle">Health Articles</h2>
@@ -424,7 +515,7 @@ async function onLogin(e) {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {}
       <div className="footer">
         <div className="container">
           © {new Date().getFullYear()} Modern Hospital Management System — Built with React + Express + MS SQL.
@@ -497,7 +588,7 @@ function TextAreaField({ label, icon, value, onChange, placeholder }) {
   );
 }
 
-/* simple cartoon doctor SVG */
+// simple cartoon doctor SVG 
 function DoctorIllustration() {
   return (
     <svg width="420" height="420" viewBox="0 0 420 420" style={{ maxWidth: "100%", height: "auto" }}>
@@ -547,3 +638,4 @@ function DoctorIllustration() {
     </svg>
   );
 }
+*/

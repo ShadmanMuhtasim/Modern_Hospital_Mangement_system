@@ -9,6 +9,9 @@
     "db:studio": "prisma studio",
     "db:generate": "prisma generate"
   },
+  "prisma": {
+  "seed": "node prisma/seed.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -18,7 +21,7 @@
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mssql": "^12.2.0"
@@ -27,4 +30,5 @@
     "nodemon": "^3.1.11",
     "prisma": "^6.19.2"
   }
+  
 }
