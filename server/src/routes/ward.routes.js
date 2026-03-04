@@ -1,4 +1,87 @@
 const router = require("express").Router();
+const requireAuth = require("../middleware/requireAuth");
+const { getPool, sql } = require("../config/db");
+
+// 1) List care units
+router.get("/units", requireAuth, async (req, res) => {
+  try {
+    const pool = await getPool();
+    const r = await pool.request().query(`
+      SELECT cu.care_unit_id, cu.unit_type, cu.floor, cu.unit_name,
+             d.department_id, d.dept_name
+      FROM dbo.CareUnits cu
+      JOIN dbo.Departments d ON d.department_id = cu.department_id
+      WHERE cu.is_active=1
+      ORDER BY d.dept_name, cu.unit_type, cu.care_unit_id
+    `);
+    res.json(r.recordset);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 2) Bed availability summary
+router.get("/beds/summary", requireAuth, async (req, res) => {
+  try {
+    const pool = await getPool();
+    const r = await pool.request().query(`
+      SELECT d.dept_name, cu.unit_type, b.status, COUNT(*) AS count
+      FROM dbo.Beds b
+      JOIN dbo.CareUnits cu ON cu.care_unit_id = b.care_unit_id
+      JOIN dbo.Departments d ON d.department_id = cu.department_id
+      WHERE b.is_active=1
+      GROUP BY d.dept_name, cu.unit_type, b.status
+      ORDER BY d.dept_name, cu.unit_type, b.status
+    `);
+    res.json(r.recordset);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 3) List beds (optional filters: departmentId, unitType, status)
+router.get("/beds", requireAuth, async (req, res) => {
+  try {
+    const { departmentId, unitType, status } = req.query || {};
+    const pool = await getPool();
+
+    const reqq = pool.request();
+    let where = `WHERE b.is_active=1`;
+
+    if (departmentId) {
+      where += ` AND cu.department_id=@deptId`;
+      reqq.input("deptId", sql.Int, Number(departmentId));
+    }
+    if (unitType) {
+      where += ` AND cu.unit_type=@unitType`;
+      reqq.input("unitType", sql.NVarChar, String(unitType));
+    }
+    if (status) {
+      where += ` AND b.status=@status`;
+      reqq.input("status", sql.NVarChar, String(status));
+    }
+
+    const r = await reqq.query(`
+      SELECT b.bed_id, b.bed_code, b.status,
+             cu.unit_type, cu.care_unit_id,
+             d.department_id, d.dept_name
+      FROM dbo.Beds b
+      JOIN dbo.CareUnits cu ON cu.care_unit_id = b.care_unit_id
+      JOIN dbo.Departments d ON d.department_id = cu.department_id
+      ${where}
+      ORDER BY d.dept_name, cu.unit_type, b.bed_code
+    `);
+
+    res.json(r.recordset);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+module.exports = router;
+
+/*
+const router = require("express").Router();
 const prisma = require("../prismaClient");
 const requireAuth = require("../middleware/requireAuth");
 
@@ -94,3 +177,4 @@ router.patch("/beds/:bedId/status", requireAuth, async (req, res) => {
 });
 
 module.exports = router;
+*/

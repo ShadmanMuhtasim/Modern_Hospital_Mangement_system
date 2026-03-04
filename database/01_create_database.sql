@@ -1,0 +1,5 @@
+IF DB_ID('ModernHospitalDB') IS NULL
+BEGIN
+    CREATE DATABASE ModernHospitalDB;
+END
+GO

@@ -1,0 +1,36 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "S:\\Modern_Hospital_Mangement_system\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|S:\\Modern_Hospital_Mangement_system\\database\\01_create_database.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:database\\01_create_database.sql||{B5A506EB-11BE-4782-9A18-21265C2CA0B4}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "01_create_database.sql - DESKTOP-DK775H8\\SQLEXPRESS01.master (DESKTOP-DK775H8\\User (89))",
+              "DocumentMoniker": "S:\\Modern_Hospital_Mangement_system\\database\\01_create_database.sql",
+              "RelativeDocumentMoniker": "database\\01_create_database.sql",
+              "ToolTip": "S:\\Modern_Hospital_Mangement_system\\database\\01_create_database.sql - DESKTOP-DK775H8\\SQLEXPRESS01.master (DESKTOP-DK775H8\\User (89))",
+              "RelativeToolTip": "database\\01_create_database.sql - DESKTOP-DK775H8\\SQLEXPRESS01.master (DESKTOP-DK775H8\\User (89))",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000826|",
+              "WhenOpened": "2026-03-02T19:24:23.209Z",
+              "EditorCaption": " - DESKTOP-DK775H8\\SQLEXPRESS01.master (DESKTOP-DK775H8\\User (89))"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

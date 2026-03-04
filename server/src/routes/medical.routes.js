@@ -1,4 +1,60 @@
 const router = require("express").Router();
+const requireAuth = require("../middleware/requireAuth");
+const { getPool, sql } = require("../config/db");
+
+// 1) Create a medical record for logged-in patient
+router.post("/records", requireAuth, async (req, res) => {
+  try {
+    const { diagnosis, treatment, notes } = req.body || {};
+    if (!diagnosis || !treatment) return res.status(400).json({ message: "diagnosis and treatment are required" });
+
+    const pool = await getPool();
+
+    // ensure patient
+    const p = await pool.request().input("uid", sql.Int, req.user.userId)
+      .query(`SELECT patient_id FROM dbo.Patients WHERE patient_id=@uid`);
+    if (!p.recordset.length) return res.status(404).json({ message: "Patient profile not found" });
+
+    const r = await pool.request()
+      .input("pid", sql.Int, req.user.userId)
+      .input("by", sql.Int, req.user.userId)
+      .input("diag", sql.NVarChar, diagnosis)
+      .input("tp", sql.NVarChar, treatment)
+      .input("notes", sql.NVarChar, notes || null)
+      .query(`
+        INSERT INTO dbo.MedicalRecords(patient_id,created_by_user_id,diagnosis,treatment_plan,notes)
+        OUTPUT INSERTED.record_id
+        VALUES (@pid,@by,@diag,@tp,@notes)
+      `);
+
+    res.status(201).json({ recordId: r.recordset[0].record_id });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 2) My records
+router.get("/records/my", requireAuth, async (req, res) => {
+  try {
+    const pool = await getPool();
+    const r = await pool.request().input("pid", sql.Int, req.user.userId).query(`
+      SELECT *
+      FROM dbo.MedicalRecords
+      WHERE patient_id=@pid
+      ORDER BY record_datetime DESC
+    `);
+    res.json(r.recordset);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+module.exports = router;
+
+
+
+/*
+const router = require("express").Router();
 const prisma = require("../prismaClient");
 const requireAuth = require("../middleware/requireAuth");
 
@@ -76,3 +132,4 @@ router.get("/records/my", requireAuth, async (req, res) => {
 });
 
 module.exports = router;
+*/

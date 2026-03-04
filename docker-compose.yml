@@ -11,5 +11,55 @@ services:
     volumes:
       - mssql_data:/var/opt/mssql
 
+  db_init:
+    image: mcr.microsoft.com/mssql-tools
+    container_name: modern_hospital_db_init
+    depends_on:
+      - db
+    volumes:
+      - ./database:/scripts:ro
+    command: >
+      bash -lc "
+      echo 'Waiting for SQL Server...' &&
+      for i in {1..60}; do
+        /opt/mssql-tools/bin/sqlcmd -S db -U sa -P 'Str0ng!Passw0rd123' -Q 'SELECT 1' && break;
+        echo 'SQL not ready yet...'; sleep 3;
+      done &&
+      echo 'Creating database if not exists...' &&
+      /opt/mssql-tools/bin/sqlcmd -S db -U sa -P 'Str0ng!Passw0rd123' -Q \"IF DB_ID('ModernHospitalDB') IS NULL CREATE DATABASE ModernHospitalDB;\" &&
+      echo 'Running schema + seed...' &&
+      /opt/mssql-tools/bin/sqlcmd -S db -U sa -P 'Str0ng!Passw0rd123' -d ModernHospitalDB -i /scripts/02_create_tables.sql &&
+      /opt/mssql-tools/bin/sqlcmd -S db -U sa -P 'Str0ng!Passw0rd123' -d ModernHospitalDB -i /scripts/03_seed_data.sql &&
+      echo 'DB init done.'
+      "
+
+  app:
+    build:
+      context: ./hospital-app
+      dockerfile: Dockerfile
+    container_name: modern_hospital_app
+    volumes:
+      - ./hospital-app:/var/www
+    depends_on:
+      - db
+    environment:
+      DB_CONNECTION: sqlsrv
+      DB_HOST: db
+      DB_PORT: 1433
+      DB_DATABASE: ModernHospitalDB
+      DB_USERNAME: sa
+      DB_PASSWORD: Str0ng!Passw0rd123
+
+  web:
+    image: nginx:alpine
+    container_name: modern_hospital_web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./hospital-app:/var/www
+      - ./hospital-app/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
 volumes:
   mssql_data:
