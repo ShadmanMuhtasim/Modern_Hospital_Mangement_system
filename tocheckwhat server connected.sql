@@ -1,0 +1,1 @@
+SELECT @@SERVERNAME AS server_name, @@VERSION AS version;

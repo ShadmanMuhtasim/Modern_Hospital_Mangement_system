@@ -12,6 +12,8 @@ app.use(express.json());
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
+app.use("/api/db", require("./routes/dbtest.routes"));
+app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/blood", require("./routes/blood.routes"));
@@ -22,6 +24,7 @@ app.use("/api/admissions", require("./routes/admission.routes"));
 app.use("/api/applications", require("./routes/applications.routes"));
 app.use("/api/donor-auth", require("./routes/donorAuth.routes"));
 app.use("/api/dev", require("./routes/dev.routes"));
+
 
 
 module.exports = app;

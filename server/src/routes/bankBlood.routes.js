@@ -1,4 +1,244 @@
 const router = require("express").Router();
+const requireAuth = require("../middleware/requireAuth");
+const { getPool, sql } = require("../config/db");
+const { getCompatibleDonorGroups, normalizeGroup } = require("../utils/bloodCompatibility");
+
+// 1) List blood banks
+router.get("/banks", requireAuth, async (req, res) => {
+  try {
+    const pool = await getPool();
+    const r = await pool.request().query(`SELECT * FROM dbo.BloodBanks WHERE is_active=1 ORDER BY blood_bank_id`);
+    res.json(r.recordset);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 2) Bank inventory
+router.get("/banks/:bankId/inventory", requireAuth, async (req, res) => {
+  try {
+    const bankId = Number(req.params.bankId);
+    const pool = await getPool();
+
+    const r = await pool.request().input("bid", sql.Int, bankId).query(`
+      SELECT blood_group, component_type, units_available
+      FROM dbo.BloodInventory
+      WHERE blood_bank_id=@bid
+      ORDER BY blood_group, component_type
+    `);
+
+    res.json(r.recordset);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 3) Register donor (creates donor profile for an existing logged-in user)
+router.post("/donors/register", requireAuth, async (req, res) => {
+  try {
+    const { bloodGroup } = req.body || {};
+    if (!bloodGroup) return res.status(400).json({ message: "bloodGroup is required" });
+
+    const pool = await getPool();
+    const bg = normalizeGroup(bloodGroup);
+
+    // if already donor profile, return it
+    const existing = await pool.request().input("uid", sql.Int, req.user.userId)
+      .query(`SELECT * FROM dbo.DonorProfiles WHERE donor_id=@uid`);
+    if (existing.recordset.length) return res.json(existing.recordset[0]);
+
+    await pool.request()
+      .input("uid", sql.Int, req.user.userId)
+      .input("bg", sql.NVarChar, bg)
+      .query(`INSERT INTO dbo.DonorProfiles(donor_id,blood_group) VALUES (@uid,@bg)`);
+
+    const donor = await pool.request().input("uid", sql.Int, req.user.userId)
+      .query(`SELECT * FROM dbo.DonorProfiles WHERE donor_id=@uid`);
+
+    res.status(201).json(donor.recordset[0]);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 4) Donate to specific bank (IT worker/admin can record)
+router.post("/banks/:bankId/donate", requireAuth, async (req, res) => {
+  try {
+    const bankId = Number(req.params.bankId);
+    const { donorUserId, bloodGroup, units } = req.body || {};
+    const unitsNum = Number(units);
+
+    if (!donorUserId || !bloodGroup || !unitsNum || unitsNum <= 0) {
+      return res.status(400).json({ message: "donorUserId, bloodGroup, units are required" });
+    }
+
+    const pool = await getPool();
+    const bg = normalizeGroup(bloodGroup);
+
+    const tx = new sql.Transaction(pool);
+    await tx.begin();
+    try {
+      const donation = await new sql.Request(tx)
+        .input("donor_id", sql.Int, Number(donorUserId))
+        .input("bank_id", sql.Int, bankId)
+        .input("bg", sql.NVarChar, bg)
+        .input("ct", sql.NVarChar, "WholeBlood")
+        .input("units", sql.Int, unitsNum)
+        .input("by", sql.Int, req.user.userId)
+        .query(`
+          INSERT INTO dbo.BloodDonations(donor_id,blood_bank_id,blood_group,component_type,units_donated,recorded_by_user_id)
+          OUTPUT INSERTED.donation_id
+          VALUES (@donor_id,@bank_id,@bg,@ct,@units,@by)
+        `);
+
+      const donationId = donation.recordset[0].donation_id;
+
+      await new sql.Request(tx)
+        .input("bank_id", sql.Int, bankId)
+        .input("donation_id", sql.Int, donationId)
+        .input("bg", sql.NVarChar, bg)
+        .input("ct", sql.NVarChar, "WholeBlood")
+        .input("chg", sql.Int, unitsNum)
+        .input("by", sql.Int, req.user.userId)
+        .query(`
+          INSERT INTO dbo.BloodInventoryTransactions(blood_bank_id,donation_id,blood_group,component_type,units_change,reason,created_by_user_id)
+          VALUES (@bank_id,@donation_id,@bg,@ct,@chg,'Donation',@by)
+        `);
+
+      await new sql.Request(tx)
+        .input("bank_id", sql.Int, bankId)
+        .input("bg", sql.NVarChar, bg)
+        .input("ct", sql.NVarChar, "WholeBlood")
+        .input("chg", sql.Int, unitsNum)
+        .query(`
+          UPDATE dbo.BloodInventory
+          SET units_available = units_available + @chg,
+              last_updated_at = SYSUTCDATETIME()
+          WHERE blood_bank_id=@bank_id AND blood_group=@bg AND component_type=@ct
+        `);
+
+      await tx.commit();
+      res.status(201).json({ message: "Donation recorded", donationId });
+    } catch (err) {
+      await tx.rollback();
+      throw err;
+    }
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 5) Create a blood request (bank/IT side)
+router.post("/banks/:bankId/request", requireAuth, async (req, res) => {
+  try {
+    const bankId = Number(req.params.bankId); // not used for request table currently (requests are dept based)
+    const { patientUserId, departmentId, bloodGroup, unitsRequired } = req.body || {};
+
+    if (!patientUserId || !departmentId || !bloodGroup || !unitsRequired) {
+      return res.status(400).json({ message: "patientUserId, departmentId, bloodGroup, unitsRequired are required" });
+    }
+
+    const pool = await getPool();
+    const bg = normalizeGroup(bloodGroup);
+
+    const r = await pool.request()
+      .input("pid", sql.Int, Number(patientUserId))
+      .input("dept", sql.Int, Number(departmentId))
+      .input("by", sql.Int, req.user.userId)
+      .input("bg", sql.NVarChar, bg)
+      .input("ct", sql.NVarChar, "WholeBlood")
+      .input("units", sql.Int, Number(unitsRequired))
+      .input("urg", sql.NVarChar, "Urgent")
+      .query(`
+        INSERT INTO dbo.BloodRequests(patient_id,department_id,requested_by_user_id,blood_group_needed,component_type,units_required,urgency,status)
+        OUTPUT INSERTED.request_id
+        VALUES (@pid,@dept,@by,@bg,@ct,@units,@urg,'Pending')
+      `);
+
+    res.status(201).json({ message: "Request created", requestId: r.recordset[0].request_id, bankId });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// 6) Issue blood for a request (reduce inventory, set request status)
+router.post("/requests/:requestId/issue", requireAuth, async (req, res) => {
+  try {
+    const requestId = Number(req.params.requestId);
+    const { bankId } = req.body || {};
+    const bank = Number(bankId);
+
+    if (!bank) return res.status(400).json({ message: "bankId is required" });
+
+    const pool = await getPool();
+
+    const reqRes = await pool.request().input("rid", sql.Int, requestId).query(`
+      SELECT * FROM dbo.BloodRequests WHERE request_id=@rid
+    `);
+    const reqRow = reqRes.recordset[0];
+    if (!reqRow) return res.status(404).json({ message: "Request not found" });
+
+    const needBG = reqRow.blood_group_needed;
+    const needUnits = reqRow.units_required;
+
+    // check inventory (same blood group)
+    const inv = await pool.request()
+      .input("bid", sql.Int, bank)
+      .input("bg", sql.NVarChar, needBG)
+      .input("ct", sql.NVarChar, "WholeBlood")
+      .query(`
+        SELECT units_available FROM dbo.BloodInventory
+        WHERE blood_bank_id=@bid AND blood_group=@bg AND component_type=@ct
+      `);
+    const available = inv.recordset?.[0]?.units_available ?? 0;
+    if (available < needUnits) return res.status(400).json({ message: "Not enough inventory", available });
+
+    const tx = new sql.Transaction(pool);
+    await tx.begin();
+    try {
+      await new sql.Request(tx)
+        .input("rid", sql.Int, requestId)
+        .query(`UPDATE dbo.BloodRequests SET status='Fulfilled' WHERE request_id=@rid`);
+
+      await new sql.Request(tx)
+        .input("bid", sql.Int, bank)
+        .input("bg", sql.NVarChar, needBG)
+        .input("ct", sql.NVarChar, "WholeBlood")
+        .input("chg", sql.Int, -needUnits)
+        .input("by", sql.Int, req.user.userId)
+        .input("rid", sql.Int, requestId)
+        .query(`
+          INSERT INTO dbo.BloodInventoryTransactions(blood_bank_id,request_id,blood_group,component_type,units_change,reason,created_by_user_id)
+          VALUES (@bid,@rid,@bg,@ct,@chg,'Fulfillment',@by)
+        `);
+
+      await new sql.Request(tx)
+        .input("bid", sql.Int, bank)
+        .input("bg", sql.NVarChar, needBG)
+        .input("ct", sql.NVarChar, "WholeBlood")
+        .input("need", sql.Int, needUnits)
+        .query(`
+          UPDATE dbo.BloodInventory
+          SET units_available = units_available - @need,
+              last_updated_at = SYSUTCDATETIME()
+          WHERE blood_bank_id=@bid AND blood_group=@bg AND component_type=@ct
+        `);
+
+      await tx.commit();
+      res.json({ message: "Issued / fulfilled", requestId, issuedUnits: needUnits });
+    } catch (err) {
+      await tx.rollback();
+      throw err;
+    }
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+module.exports = router;
+
+/*
+const router = require("express").Router();
 const prisma = require("../prismaClient");
 const requireAuth = require("../middleware/requireAuth");
 const { getCompatibleDonorGroups, normalizeGroup } = require("../utils/bloodCompatibility");
@@ -214,3 +454,4 @@ router.post("/requests/:requestId/issue", requireAuth, async (req, res) => {
 });
 
 module.exports = router;
+*/
